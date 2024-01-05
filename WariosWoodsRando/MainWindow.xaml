@@ -1,0 +1,29 @@
+﻿<Window x:Class="WariosWoodsRando.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Wario's Woods NES - Randomizer v1.0" Height="180" Width="400" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <StackPanel VerticalAlignment="Top" Margin="0,5,0,0">
+            <!-- File Selection -->
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <TextBlock Text="Select ROM File: " VerticalAlignment="Center"/>
+                <TextBox x:Name="txtInputFile" Width="200" Margin="5"/>
+                <Button Content="Browse" Click="BrowseInputFile_Click" Margin="5"/>
+            </StackPanel>
+
+            <!-- Generated File Selection -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+
+            <!-- Number Input -->
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock  Text="Seed: " VerticalAlignment="Center"/>
+                <TextBox x:Name="seed" Width="100" Margin="5" PreviewTextInput="NumberTextBox_PreviewTextInput"/>
+                <Button Content="Random Seed" Margin="5" Click="Button_Click"/>
+            </StackPanel>
+
+            <!-- Generate Button -->
+            <Button Content="Generate" Click="GenerateButton_Click" Width="100" Height="30" Margin="0,0,0,10" FontWeight="Bold"/>
+        </StackPanel>
+        <Label Content="Randomizer brought to you by Aurel509" HorizontalAlignment="Right" Margin="0,114,0,0" VerticalAlignment="Top" FontSize="9"/>
+    </Grid>
+</Window>
