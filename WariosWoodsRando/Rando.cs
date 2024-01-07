@@ -26,9 +26,12 @@ namespace WariosWoodsRando
             int seed;
             
             string romHash = GetMD5Hash(filePath);
-            Console.WriteLine(filePath);
+            Debug.WriteLine(romHash);
 
-            if (romHash != "d8cfbee2a988e6608d1a017923d937a8")
+            //byte shift in the checksum for some roms (unsure of the reason) so I added 2.
+            //Might have to change this method soon.
+
+            if (romHash != "d8cfbee2a988e6608d1a017923d937a8" && romHash != "fe84c1d05561e9cb9ba1acfa4a20ed8f")
             {
                 MessageBox.Show
                     (
