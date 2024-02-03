@@ -1,9 +1,9 @@
 ﻿<Window x:Class="WariosWoodsRando.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Wario's Woods NES - Randomizer v1.0.1" Height="180" Width="400" WindowStartupLocation="CenterScreen">
+        Title="Wario's Woods NES - Randomizer v1.2" Height="497" Width="497" WindowStartupLocation="CenterScreen">
     <Grid>
-        <StackPanel VerticalAlignment="Top" Margin="0,5,0,0">
+        <StackPanel VerticalAlignment="Center" Margin="0,0,0,50">
             <!-- File Selection -->
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <TextBlock Text="Select ROM File: " VerticalAlignment="Center"/>
@@ -20,10 +20,31 @@
                 <TextBox x:Name="seed" Width="100" Margin="5" PreviewTextInput="NumberTextBox_PreviewTextInput"/>
                 <Button Content="Random Seed" Margin="5" Click="Button_Click"/>
             </StackPanel>
+            <GroupBox Height="150" Header="Main features" FontWeight="Bold" FontSize="16">
+                <StackPanel>
+                    <CheckBox Name="Box_vanilla_height" Content="Keep the vanilla heights" Margin="20,0,0,0" FontWeight="Normal"/>
+                    <CheckBox Name="Box_random_gimmicks" Content="Randomize Gimmicks (Check = Easy | Square = Hard)" Margin="20,0,0,0" IsThreeState="True" FontWeight="Normal"/>
+                    <TextBlock TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap" FontStyle="Italic" FontSize="12">Easy mode has fewer gimmicky levels, whereas in Hard mode, there is a significantly higher chance of encountering them, which can substantially increase the duration of a run.</TextBlock>
+                    <CheckBox Name="Box_random_speed" Content="Randomize Speed drops" Margin="20,0,0,0" FontWeight="Normal"/>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Height="109" Header="Misc features" FontWeight="Bold" FontSize="16">
+                <StackPanel>
+                    <CheckBox Name="Box_no_music" Content="Disable All Music (Keeping the SFXs)" Margin="20,0,0,0" FontWeight="Normal" Checked="Box_no_music_Checked" Unchecked="Box_no_music_Unchecked"/>
+                    <WrapPanel Width="436">
+                        <Label HorizontalAlignment="Left" Content="Choose Music" FontWeight="Normal"/>
+                        <ComboBox HorizontalAlignment="Right" Name="cbox_musics" Width="190" FontWeight="Normal" Height="26"/>
+                    </WrapPanel>
+                    <CheckBox Name="Box_wario_music" Content="Change Wario's phase music to Time Race Wario's" Margin="20,0,0,0" FontWeight="Normal" />
+
+                </StackPanel>
+            </GroupBox>
+            <Button Content="Generate" Click="GenerateButton_Click" Width="214" Height="34" FontWeight="Bold" FontSize="20"/>
+
+
 
             <!-- Generate Button -->
-            <Button Content="Generate" Click="GenerateButton_Click" Width="100" Height="30" Margin="0,0,0,10" FontWeight="Bold"/>
         </StackPanel>
-        <Label Content="Randomizer brought to you by Aurel509" HorizontalAlignment="Right" Margin="0,114,0,0" VerticalAlignment="Top" FontSize="9"/>
+        <Label Content="Randomizer brought to you by Aurel509" HorizontalAlignment="Right" Margin="0,414,5,0" VerticalAlignment="Top" FontSize="10"/>
     </Grid>
 </Window>

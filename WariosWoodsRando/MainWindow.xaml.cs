@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -29,6 +30,22 @@ namespace WariosWoodsRando
 
             txtInputFile.Text = LastInputFilePath;
 
+            // Generate list of available music
+            List<string> musics = new List<string>
+            {
+                "Normal Music",
+                "VS Mode Music",
+                "Time Race Music",
+                "Lesson Mode Music",
+            };
+
+            foreach(String s in musics)
+                cbox_musics.Items.Add(s);
+            
+
+            cbox_musics.SelectedIndex = 0;
+
+
         }
 
         private void BrowseInputFile_Click(object sender, RoutedEventArgs e)
@@ -52,7 +69,7 @@ namespace WariosWoodsRando
 
         private void GenerateButton_Click(object sender, RoutedEventArgs e)
         {
-            Rando.Main(LastInputFilePath, seed.Text);           
+            Rando.Main(LastInputFilePath, seed.Text, this);           
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -60,6 +77,19 @@ namespace WariosWoodsRando
             Random r = new Random();
             seed.Text = r.Next(1000000, 9999999).ToString();
 
+        }
+
+        public bool NoMusic() { return (bool)Box_no_music.IsChecked; }
+        public bool VanillaHeight() { return (bool)Box_vanilla_height.IsChecked; }
+
+        private void Box_no_music_Checked(object sender, RoutedEventArgs e)
+        {
+            cbox_musics.IsEnabled = false;
+        }
+
+        private void Box_no_music_Unchecked(object sender, RoutedEventArgs e)
+        {
+            cbox_musics.IsEnabled = true;
         }
     }
 }

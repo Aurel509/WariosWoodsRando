@@ -2,20 +2,22 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Windows;
+using System.Windows.Media.Media3D;
 
 namespace WariosWoodsRando
 {
-    public class Rando
+    public class Rando : MainWindow
     {
         /// <summary>
         /// Main randomizing logic function
         /// </summary>
         /// <param name="filePath">Vanilla rom path</param>
         /// <param name="inputSeed">Seed input taken from the textbox</param>
-        public static void Main(string filePath, string inputSeed)
+        public static void Main(string filePath, string inputSeed, MainWindow mw)
         {
             string folderPath = Path.GetDirectoryName(filePath);
 
@@ -65,7 +67,7 @@ namespace WariosWoodsRando
 
 
             CopyFile(filePath, randomizedFilePath);
-            ModifyFile(randomizedFilePath, startOffset, endOffset, specificBytes, seed);
+            ModifyFile(randomizedFilePath, startOffset, endOffset, specificBytes, seed, mw);
 
             MessageBox.Show(
             "ROM Randomized with success!\nIts located alongside your normal ROM.",
@@ -209,7 +211,7 @@ namespace WariosWoodsRando
                 Console.WriteLine($"encoded with bytes: {encodedMessage}\n");
             }
         }
-        static void ModifyFile(string filePath, long startOffset, long endOffset, byte[] specificBytes, int seed)
+        static void ModifyFile(string filePath, long startOffset, long endOffset, byte[] specificBytes, int seed, MainWindow mw)
         {
             List<byte> byteList = GenerateByteList(202, 0x01, 0x09);
             long roundsPointerStart = 0x8010;
@@ -228,8 +230,8 @@ namespace WariosWoodsRando
                     for (long offset = startOffset; offset <= endOffset; offset++)
                     {
 
-                        //
-                        /*if(layout == 150)
+                        //VANILLA HEIGHTS + RANDOM
+                        if((bool)mw.Box_vanilla_height.IsChecked)
                         {
                             if (fileData[offset] >= 0x01 && fileData[offset] <= 0x0F)
                             {
@@ -238,13 +240,15 @@ namespace WariosWoodsRando
                             byte newByte = specificBytes[random.Next(specificBytes.Length)];
                             fileData[offset] = newByte;
                             continue;
-                        }*/
+                        }
+
+
                         if(layout == 202)
                             //Avoid writing more code in case there are a few bytes left.
                             continue;
                         
-
-                        if(counter == 0)
+                        // FULL RANDOM
+                        if(counter == 0 && (bool)!mw.Box_vanilla_height.IsChecked)
                         {
                             long pointerLocation = roundsPointerStart + layout * 2;
 
@@ -275,25 +279,127 @@ namespace WariosWoodsRando
                     fileStream.Write(fileData, (int)roundsPointerStart, (int)(endOffset - roundsPointerStart + 1));
                 }
 
-                //Writing the seed down in the game 
+                //Post rando edits
+                List<byte> Bytes = new List<byte>();
+
+                /////////////////////////////
+                ////// Seed writing /////////
+                /////////////////////////////
+               
+                //Locations of the 2 menus where the seed is gonna be written
                 int menu1 = 0x28A1A;
                 int menu2 = 0x292DD;
-                List<byte> seedBytes = new List<byte>();
+
 
                 // Digit to byte conversion
                 while (seed > 0)
                 {
                     byte digit = (byte)(seed % 10);
-                    seedBytes.Insert(0, digit);
+                    Bytes.Insert(0, digit);
                     seed /= 10;
                 }
                 //$E0 is where the tileset is located. So we add 0xE0 to each digit
-                for (int i = 0; i < seedBytes.Count; i++)
-                    seedBytes[i] += 0xE0;
+                for (int i = 0; i < Bytes.Count; i++)
+                    Bytes[i] += 0xE0;
                 
+                //Modify the following bytes
+                EditBytes(filePath, menu1, Bytes.ToArray());
+                EditBytes(filePath, menu2, Bytes.ToArray());
 
-                EditBytes(filePath, menu1, seedBytes.ToArray());
-                EditBytes(filePath, menu2, seedBytes.ToArray());
+                /////////////////////////////
+                ////// Music Stuff  /////////
+                /////////////////////////////
+                
+                //Musics location ROM adresses
+                int pointer = 0x38F9F;
+
+                if ((bool)mw.Box_no_music.IsChecked)
+                {
+                    //0x4D0 = size of the music spot, we just nuke everything if no music enabled.
+                    for (int i = 0; i < 0x4D0; i++)
+                        Bytes.Insert(0, 0x00);
+                } 
+
+                EditBytes(filePath, pointer, Bytes.ToArray());
+
+                byte[] music = {0x0};
+                int musicPointer = 0x17038;
+                int wariomusicPointer = 0x1703D;
+                switch (mw.cbox_musics.SelectedIndex)
+                {
+                    case 0:
+                        music[0] = 0x13;
+                        break;
+                    case 1:
+                        music[0] = 0x0A;
+                        break;
+                    case 2:
+                        music[0] = 0x10;
+                        break;
+                    case 3:
+                        music[0] = 0x06;
+                        break;
+                }
+                EditBytes(filePath, musicPointer, music);
+
+                if ((bool)mw.Box_wario_music.IsChecked)
+                {
+                    music[0] = 0x16;
+                    EditBytes(filePath, wariomusicPointer, music);
+                }
+
+                /////////////////////////
+                /// ROUNDS PARAMETERS ///
+                /////////////////////////
+                
+                startOffset = 0xAB5C;
+                endOffset = 0xAE03;
+                byte[] enemiesTypesEASY = { 0x00, 0x01, 0x01, 0x02, 0x03, 0x07, 0x06, 0x04, 0x05, 0x07, 0x07, 0x02};
+                //byte[] enemiesTypesHARD = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
+                byte[] speedTypes = { 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF };
+
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite))
+                {
+                    fileData = new byte[fileStream.Length];
+                    fileStream.Read(fileData, 0, fileData.Length);
+
+
+                    int counter = 1;
+                    for (long offset = startOffset+1; offset <= endOffset; offset++)
+                    {
+                        Random random = new Random(seed+(int)offset);
+                        if (counter == 3) 
+                        {
+                            switch(mw.Box_random_gimmicks.IsChecked)
+                            {
+                                case null:
+                                    byte bit1 = (byte)random.Next(0, 8);
+                                    byte bit2 = (byte)random.Next(0, 8);
+
+                                    byte resultByte = (byte)((bit1 << 4) | bit2);
+
+                                    fileData[offset] = resultByte;
+                                    break;
+                                case true:
+                                    fileData[offset] = enemiesTypesEASY[random.Next(enemiesTypesEASY.Length)];
+                                    break;
+                                case false:
+                                    break;
+                            }
+                        }
+
+                        if(counter == 4 && (bool)mw.Box_random_speed.IsChecked)
+                            fileData[offset] = speedTypes[random.Next(speedTypes.Length)];
+
+                        if (counter == 7)
+                            counter = 0;
+
+                        counter++;
+                    }
+
+                    fileStream.Seek(startOffset, SeekOrigin.Begin);
+                    fileStream.Write(fileData, (int)startOffset, (int)(endOffset - startOffset + 1));
+                }
 
                 Console.WriteLine("File modified successfully.");
             }
