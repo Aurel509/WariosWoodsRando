@@ -33,7 +33,8 @@ namespace WariosWoodsRando
             //byte shift in the checksum for some roms (unsure of the reason) so I added 2.
             //Might have to change this method soon.
 
-            if (romHash != "d8cfbee2a988e6608d1a017923d937a8" && romHash != "fe84c1d05561e9cb9ba1acfa4a20ed8f")
+            //if (romHash != "d8cfbee2a988e6608d1a017923d937a8" && romHash != "fe84c1d05561e9cb9ba1acfa4a20ed8f")
+            if (romHash != "e0875e4e768d48c90e58b74c110a9822")
             {
                 MessageBox.Show
                     (
@@ -86,6 +87,7 @@ namespace WariosWoodsRando
                 {
                     using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                     {
+                        fileStream.Seek(0x07, SeekOrigin.Begin);
                         byte[] hashBytes = md5.ComputeHash(fileStream);
                         return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
                     }
