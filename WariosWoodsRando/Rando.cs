@@ -161,6 +161,7 @@ namespace WariosWoodsRando
 
         /*
          * Unfinished yet. 
+         * Will do later
          */
         static string EncodeMessage(string input, int additionalValue)
         {
