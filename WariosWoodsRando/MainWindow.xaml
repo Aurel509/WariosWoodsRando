@@ -1,7 +1,7 @@
 ﻿<Window x:Class="WariosWoodsRando.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Wario's Woods NES - Randomizer v1.2" Height="497" Width="497" WindowStartupLocation="CenterScreen">
+        Title="Wario's Woods NES - Randomizer v1.2.1" Height="497" Width="497" WindowStartupLocation="CenterScreen">
     <Grid>
         <StackPanel VerticalAlignment="Center" Margin="0,0,0,50">
             <!-- File Selection -->

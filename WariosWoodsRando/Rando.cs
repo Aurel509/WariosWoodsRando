@@ -61,7 +61,7 @@ namespace WariosWoodsRando
             string randomizedFilePath = folderPath + "\\woods" + "_" + seed + ".nes";
 
             //Enemy list. 0x00 being empty space 
-            byte[] specificBytes = { 0x00, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0 };
+            byte[] specificBytes = {0x00, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0};
 
 
             Console.WriteLine(randomizedFilePath);
@@ -112,12 +112,12 @@ namespace WariosWoodsRando
             }
         }
  
-        static List<byte> GenerateByteList(int count, byte minValue, byte maxValue)
+        static List<byte> GenerateByteList(int count, byte minValue, byte maxValue, int seed)
         {
             if (count <= 0 || minValue > maxValue)
                 throw new ArgumentException("Invalid parameters for generating byte list.");
 
-            Random random = new Random();
+            Random random = new Random(seed);
             List<byte> byteList = new List<byte>(count);
 
             for (int i = 0; i < count; i++)
@@ -133,13 +133,13 @@ namespace WariosWoodsRando
 
             Console.WriteLine(t.ToString());
 
-            if (t < 7779)
+            if (t < (7780 - count))
                 return byteList;
             else 
             {
                 Debug.WriteLine("bytes exceeded, rerolling...");
                 Thread.Sleep(20);
-                return GenerateByteList(count, minValue, maxValue);
+                return GenerateByteList(count, minValue, maxValue, seed);
             }
         }
 
@@ -215,8 +215,20 @@ namespace WariosWoodsRando
         }
         static void ModifyFile(string filePath, long startOffset, long endOffset, byte[] specificBytes, int seed, MainWindow mw)
         {
-            List<byte> byteList = GenerateByteList(202, 0x01, 0x09);
+
+            /*
+             * 206 is the number of layouts supposedly coded in the main area. 
+             * Prior to this, the number was set 202 to avoid rerolling
+             * (rerolling is necessary in case the number of lines exceeded the maximum amount of space)
+             * Problem is due to how the game pick the levels, the last rounds in this list were kinda messed up
+             * Causing invisible blocks and such, this should fix it.
+             */
+
+            List<byte> byteList = GenerateByteList(206, 0x01, 0x09, seed);
             long roundsPointerStart = 0x8010;
+
+            bool lastLayout = false;
+            int final = 0;
 
             try
             {
@@ -233,7 +245,7 @@ namespace WariosWoodsRando
                     {
 
                         //VANILLA HEIGHTS + RANDOM
-                        if((bool)mw.Box_vanilla_height.IsChecked)
+                        if ((bool)mw.Box_vanilla_height.IsChecked)
                         {
                             if (fileData[offset] >= 0x01 && fileData[offset] <= 0x0F)
                             {
@@ -244,11 +256,21 @@ namespace WariosWoodsRando
                             continue;
                         }
 
+                        //Preventing overflow and useless data usage
+                        if (layout >= 206) {
+                            if (layout == 206){ final = fileData[offset - 1] * 7; layout++; }
 
-                        if(layout == 202)
-                            //Avoid writing more code in case there are a few bytes left.
+                            if (!lastLayout)
+                            {
+                                fileData[offset] = specificBytes[random.Next(specificBytes.Length)];
+                                final--;
+                                if(final == 0)
+                                    lastLayout = true;
+                            } else {
+                                fileData[offset] = 0x00;
+                            }
                             continue;
-                        
+                        }
                         // FULL RANDOM
                         if(counter == 0 && (bool)!mw.Box_vanilla_height.IsChecked)
                         {
@@ -260,8 +282,10 @@ namespace WariosWoodsRando
                             fileData[pointerLocation + 1] = (byte)((offset) - 0x10 >> 8); //first byte read
                             fileData[pointerLocation] = (byte)((byte)(offset) - 0x10); //second byte read 
 
+
                             /* 
                              * Debug stuff
+                             * 
                             byte t1 = (byte)((offset) - 0x10 >> 8);
                             byte t2 = (byte)((byte)(offset) - 0x10);
                             Console.WriteLine("{0:X} {1:X}",t1, t2
@@ -272,6 +296,7 @@ namespace WariosWoodsRando
                         } else
                         {
                             fileData[offset] = specificBytes[random.Next(specificBytes.Length)];
+                            byte test = fileData[offset];
                             counter--;
                         }
                          
@@ -318,6 +343,7 @@ namespace WariosWoodsRando
                 if ((bool)mw.Box_no_music.IsChecked)
                 {
                     //0x4D0 = size of the music spot, we just nuke everything if no music enabled.
+                    //outdated code will be replaced soon enough 
                     for (int i = 0; i < 0x4D0; i++)
                         Bytes.Insert(0, 0x00);
                 } 
@@ -356,7 +382,7 @@ namespace WariosWoodsRando
                 
                 startOffset = 0xAB5C;
                 endOffset = 0xAE03;
-                byte[] enemiesTypesEASY = { 0x00, 0x01, 0x01, 0x02, 0x03, 0x07, 0x06, 0x04, 0x05, 0x07, 0x07, 0x02};
+                byte[] enemiesTypesEASY = { 0x00, 0x11, 0x10, 0x02, 0x03, 0x04, 0x05, 0x60, 0x07, 0x21};
                 //byte[] enemiesTypesHARD = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
                 byte[] speedTypes = { 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F, 0xFF };
 
@@ -379,6 +405,13 @@ namespace WariosWoodsRando
                                     byte bit2 = (byte)random.Next(0, 8);
 
                                     byte resultByte = (byte)((bit1 << 4) | bit2);
+
+
+                                    //Temporary fix to avoid ?? AND double enemies to be together
+                                    if(resultByte == 0x67 || resultByte == 0x76)
+                                        resultByte = 0x66;
+
+
 
                                     fileData[offset] = resultByte;
                                     break;
@@ -407,7 +440,7 @@ namespace WariosWoodsRando
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"error: {ex.Message}");
+                Console.WriteLine($"error: {ex.Message} {ex.Data}");
             }
         }
 
