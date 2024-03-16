@@ -36,12 +36,11 @@ namespace WariosWoodsRando
             //if (romHash != "d8cfbee2a988e6608d1a017923d937a8" && romHash != "fe84c1d05561e9cb9ba1acfa4a20ed8f")
             if (romHash != "e0875e4e768d48c90e58b74c110a9822")
             {
-                MessageBox.Show
-                    (
+                MessageBox.Show(
                     "This is not a correct Wario's Woods NES ROM.", 
                     "Error",
                     MessageBoxButton.OK,MessageBoxImage.Error
-                        );
+                 );
 
                 return;
             }
@@ -79,6 +78,11 @@ namespace WariosWoodsRando
         }
         static bool IsSevenDigitNumber(int number) { return number >= 1000000 && number <= 9999999; }
 
+        /// <summary>
+        /// Creating an MD5 HASH
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
         static string GetMD5Hash(string filePath)
         {
             using (MD5 md5 = MD5.Create())
@@ -112,10 +116,11 @@ namespace WariosWoodsRando
             }
         }
  
-        static List<byte> GenerateByteList(int count, byte minValue, byte maxValue, int seed)
+
+        static List<byte> HeightByteList(int count, byte minValue, byte maxValue, int seed)
         {
             if (count <= 0 || minValue > maxValue)
-                throw new ArgumentException("Invalid parameters for generating byte list.");
+                throw new ArgumentException("Invalid parameters for byte list.");
 
             Random random = new Random(seed);
             List<byte> byteList = new List<byte>(count);
@@ -125,21 +130,22 @@ namespace WariosWoodsRando
                 byte randomValue = (byte)random.Next(minValue, maxValue + 1);
                 byteList.Add(randomValue);
             }
-            int t = 0;
+            int totalBytes = 0;
 
 
             foreach (byte l in byteList)
-                t += l * 7;
+            {
+                totalBytes += l * 7;
+            }
+            Console.WriteLine(totalBytes.ToString());
 
-            Console.WriteLine(t.ToString());
-
-            if (t < (7780 - count))
+            if (totalBytes < (7780 - count))
                 return byteList;
             else 
             {
                 Debug.WriteLine("bytes exceeded, rerolling...");
                 Thread.Sleep(20);
-                return GenerateByteList(count, minValue, maxValue, seed);
+                return HeightByteList(count, minValue, maxValue, seed);
             }
         }
 
@@ -163,6 +169,8 @@ namespace WariosWoodsRando
          * Unfinished yet. 
          * Will do later
          */
+
+        /*
         static string EncodeMessage(string input, int additionalValue)
         {
             int baseValue = 0x40;
@@ -186,9 +194,14 @@ namespace WariosWoodsRando
                     encodedBytes.Add((byte)charValue);
                 }
                 else if (specialCharactersMapping.ContainsKey(c))
+                {
                     encodedBytes.Add(specialCharactersMapping[c]);
+                }
                 else
+                {
                     encodedBytes.Add((byte)c);
+                }
+
             }
 
             return BitConverter.ToString(encodedBytes.ToArray()).Replace("-", " ");
@@ -214,6 +227,7 @@ namespace WariosWoodsRando
                 Console.WriteLine($"encoded with bytes: {encodedMessage}\n");
             }
         }
+        */
         static void ModifyFile(string filePath, long startOffset, long endOffset, byte[] specificBytes, int seed, MainWindow mw)
         {
 
@@ -225,7 +239,7 @@ namespace WariosWoodsRando
              * Causing invisible blocks and such, this should fix it.
              */
 
-            List<byte> byteList = GenerateByteList(206, 0x01, 0x09, seed);
+            List<byte> byteList = HeightByteList(206, 0x01, 0x09, seed);
             long roundsPointerStart = 0x8010;
 
             bool lastLayout = false;
@@ -266,7 +280,9 @@ namespace WariosWoodsRando
                                 fileData[offset] = specificBytes[random.Next(specificBytes.Length)];
                                 final--;
                                 if(final == 0)
+                                {
                                     lastLayout = true;
+                                }
                             } else {
                                 fileData[offset] = 0x00;
                             }
@@ -411,8 +427,6 @@ namespace WariosWoodsRando
                                     //Temporary fix to avoid ?? AND double enemies to be together
                                     if(resultByte == 0x67 || resultByte == 0x76)
                                         resultByte = 0x66;
-
-
 
                                     fileData[offset] = resultByte;
                                     break;
